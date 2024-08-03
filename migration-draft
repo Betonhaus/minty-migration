@@ -1,0 +1,38 @@
+# this process currently assumes that you have performed a fresh install of Linux Mint 21.3 on a virtual machine that has all updates installed
+
+# remove all ubuntu entries in /etc/apt/sources.c/* and change "virginia" to "faye"
+
+# run as root
+
+# remove all -dev+-dev:amd64 packages, stash the list somewhere, at the end install them again
+dpkg -l |grep ^ii|grep -- -dev| awk '{print $2}' > /root/dev.pkgs
+apt-get --purge remove `cat /root/dev.pkgs`
+
+# install debian repo keys and debian repo
+apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 648ACFD622F3D138 0E98404D386FA1D9
+cat > /etc/apt/sources.list << EOF
+deb http://debian.ethz.ch/debian/ bookworm main contrib non-free non-free-firmware
+deb-src http://debian.ethz.ch/debian/ bookworm main contrib non-free non-free-firmware
+# enable following two lines on 10/06/2023
+#deb http://security.debian.org/debian-security bookworm-security main
+#deb-src http://security.debian.org/debian-security bookworm-security main
+# bookworm-updates, to get updates before a point release is made;
+# see https://www.debian.org/doc/manuals/debian-reference/ch02.en.html#_updates_and_backports
+deb http://debian.ethz.ch/debian/ bookworm-updates main contrib non-free non-free-firmware
+deb-src http://debian.ethz.ch/debian/ bookworm-updates main contrib non-free non-free-firmware
+EOF
+# remove ubuntu hack
+rm /etc/profile.d/01-locale-fix.sh
+
+# update pkg index
+apt-get update
+#
+#export DEBIAN_FRONTEND=noninteractive
+apt-get upgrade -uy
+apt-get dist-upgrade
+
+#currently get the following error message:
+The following packages have been held back:
+ grub-efi-amd64-bin plymouth plymouth-label
+
+ errors encountered: loss of internet connection, restoring from snapshot and investigating
